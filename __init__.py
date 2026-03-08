@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from pathlib import Path
 from werkzeug.security import check_password_hash, generate_password_hash
-import secrets
+import os
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "anytout.db"
@@ -13,7 +13,7 @@ engine = create_engine(DB_URL)
 SessionLocal = sessionmaker(bind=engine) 
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 @app.route("/")
 def home():
