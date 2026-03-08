@@ -17,7 +17,29 @@ app.secret_key = secrets.token_hex(32)
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+
+    db_session = SessionLocal()
+
+    try:
+        result = db_session.execute(
+            text("""
+                SELECT t.tout_id, c.username, t.thoughts, t.created_at, t.like_s
+                FROM thoughts t
+                JOIN credentials c
+                ON t.user_id = c.user_id
+                ORDER BY t.created_at DESC
+            """)
+        )
+
+        thoughts = result.fetchall()
+
+    finally:
+        db_session.close()
+
+    if not thoughts:
+        thoughts = None
+
+    return render_template("index.html", thoughts=thoughts)
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -72,3 +94,88 @@ def login():
         flash(error)
 
     return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
+
+@app.route("/create_post", methods=["GET", "POST"])
+def create_post():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        thought = request.form.get("thought", "").strip()
+        user_id = session.get("user_id")
+
+        if not thought:
+            return render_template(
+                "create_post.html",
+                error="Thought cannot be empty."
+            )
+
+        db_session = SessionLocal()
+        try:
+            db_session.execute(
+                text("INSERT INTO thoughts (user_id, thoughts) VALUES (:user_id, :thoughts)"),
+                {
+                    "user_id": user_id,
+                    "thoughts": thought,
+                },
+            )
+            db_session.commit()
+        finally:
+            db_session.close()
+
+        return redirect(url_for("home"))
+
+    return render_template("create_post.html")
+
+@app.route("/like", methods=["POST"])
+def like_thought():
+
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    thought_id = request.form.get("thought_id")
+
+    db_session = SessionLocal()
+
+    try:
+        result = db_session.execute(
+            text("""
+                SELECT 1
+                FROM likes
+                WHERE user_id = :uid AND tout_id = :tid
+            """),
+            {"uid": user_id, "tid": thought_id}
+        )
+
+        already_liked = result.fetchone()
+
+        if not already_liked:
+            db_session.execute(
+                text("""
+                    INSERT INTO likes (user_id, tout_id)
+                    VALUES (:uid, :tid)
+                """),
+                {"uid": user_id, "tid": thought_id}
+            )
+
+            db_session.execute(
+                text("""
+                    UPDATE thoughts
+                    SET like_s = like_s + 1
+                    WHERE tout_id = :tid
+                """),
+                {"tid": thought_id}
+            )
+
+            db_session.commit()
+
+    finally:
+        db_session.close()
+
+    return redirect(url_for("home"))

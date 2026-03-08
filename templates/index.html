@@ -10,13 +10,28 @@
 		<p style="text-align:center;">Welcome on Anytout</p>
 
 		<p style="text-align:center;">
-		<a href="{{ url_for('login') }}"><button type="submit">Login</button></a>
-		<a href="{{ url_for('signup') }}"><button type="submit">Sign Up</button></a>
+		{% if session.get("user_id") %}
+    			<a href="{{ url_for('logout') }}"><button>Log Out</button></a>
+    			<a href="{{ url_for('create_post') }}"><button>Create Post</button></a>
+		{% else %}
+    			<a href="{{ url_for('login') }}"><button>Login</button></a>
+    			<a href="{{ url_for('signup') }}"><button>Sign Up</button></a>
+		{% endif %}
 		</p>
 
 		<fieldset style="text-align:center;"> 
-		Discover daily thoughts !
-		{% if x %}
+		{% if thoughts %}
+		{% for thought in thoughts %}
+			<p><strong>{{ thought[1] }}</strong></p>
+        		<p>{{ thought[2] }}</p>
+        		<small>{{ thought[3] }}</small><br><br>
+			<form method="POST" action="/like">
+        		<input type="hidden" name="thought_id" value="{{ thought[0] }}">
+        		<button type="submit">👍 {{ thought[4] }}</button>
+    			</form><hr>
+		{% endfor %}
+		{% else %}
+			<p>No thoughts yet.</p>
 		{% endif %}
 		</<fieldset>
 	</body>
