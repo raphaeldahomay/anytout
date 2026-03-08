@@ -13,6 +13,7 @@ def create_app():
 
     db_path = os.path.join(app.instance_path, "app.db")
 
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
     app.config["DATABASE"] = db_path
 
     # create database if needed
@@ -28,4 +29,4 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
