@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="stylesheet" href="styles.css">
+		<title>My test page</title>
+	</head>
+	<body>
+		<p style="text-align:center;">Welcome on Anytout</p>
+
+		<p style="text-align:center;">
+		<a href="{{ url_for('login') }}"><button type="submit">Login</button></a>
+		<a href="{{ url_for('signup') }}"><button type="submit">Sign Up</button></a>
+		</p>
+
+		<fieldset style="text-align:center;"> 
+		Discover daily thoughts !
+		{% if x %}
+		{% endif %}
+		</<fieldset>
+	</body>
+</html>
